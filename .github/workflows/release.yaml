@@ -214,6 +214,7 @@ jobs:
           print-hash: true
           packages-dir: dist/
           password: ${{ secrets.PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
 
   github_release:
     needs:
