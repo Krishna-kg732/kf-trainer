@@ -1,5 +1,5 @@
 [project]
-name = "kubeflow_trainer_api"
+name = "krishna-kubeflow-trainer-api"
 dynamic = ["version"]
 requires-python = ">=3.9"
 authors = [
@@ -37,3 +37,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "kubeflow_trainer_api/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kubeflow_trainer_api"]
