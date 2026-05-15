@@ -13,7 +13,7 @@ on:
 jobs:
   build-and-publish:
     name: Build and Publish Images
-    if: github.repository == 'kubeflow/trainer'
+    # if: github.repository == 'kubeflow/trainer'
     runs-on: oracle-vm-16cpu-64gb-x86-64
 
     env:

@@ -199,7 +199,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: release
-      url: https://pypi.org/project/kubeflow-trainer-api/
+      url: https://test.pypi.org/project/krishna-kubeflow-trainer-api/
 
     steps:
       - name: Download build artifacts
@@ -208,12 +208,14 @@ jobs:
           name: python-dist-${{ needs.prepare.outputs.version }}
           path: dist/
 
-      - name: Publish to PyPI
+      - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print-hash: true
           packages-dir: dist/
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          user: ${{ secrets.TWINE_USERNAME }}
+          password: ${{ secrets.TWINE_PASSWORD }}
 
   github_release:
     needs:
