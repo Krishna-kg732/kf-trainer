@@ -60,14 +60,38 @@ echo -n "v$NEW_VERSION" > "$VERSION_FILE"
 echo "Updated VERSION file to $NEW_VERSION"
 
 # Update image tags in manifests
-find "$MANIFESTS_DIR" -type f -name '*.yaml' -exec sed -i "s/newTag: .*/newTag: $TAG/" {} +
+while IFS= read -r manifest_file; do
+  python3 - "$manifest_file" "$TAG" <<'PYTHON'
+import pathlib
+import re
+import sys
+
+manifest_path = pathlib.Path(sys.argv[1])
+tag = sys.argv[2]
+text = manifest_path.read_text()
+pattern = re.compile(r"^newTag: .*$", re.MULTILINE)
+
+if pattern.search(text):
+  manifest_path.write_text(pattern.sub(f"newTag: {tag}", text, count=1))
+PYTHON
+done < <(find "$MANIFESTS_DIR" -type f -name '*.yaml')
 echo "Updated image tags in manifests to $TAG"
 
 echo "Pinning ghcr.io image references in manifests to $TAG"
 CHANGED_FILES=$(grep -REl "ghcr\.io/kubeflow/trainer/[A-Za-z0-9._/-]+:latest" "$MANIFESTS_DIR" || true)
 if [ -n "$CHANGED_FILES" ]; then
   while IFS= read -r f; do
-    sed -i -E "s|(ghcr\.io/kubeflow/trainer/[A-Za-z0-9._/-]+):latest|\\1:${TAG}|g" "$f"
+    python3 - "$f" "$TAG" <<'PYTHON'
+import pathlib
+import re
+import sys
+
+file_path = pathlib.Path(sys.argv[1])
+tag = sys.argv[2]
+text = file_path.read_text()
+pattern = re.compile(r"(ghcr\.io/kubeflow/trainer/[A-Za-z0-9._/-]+):latest")
+file_path.write_text(pattern.sub(rf"\1:{tag}", text))
+PYTHON
     echo "  Updated ${f#$MANIFESTS_DIR/}"
   done <<< "$CHANGED_FILES"
 else
@@ -114,11 +138,23 @@ docker run --rm -u "$(id -u):$(id -g)" -v "$ABSOLUTE_REPO_ROOT:/app" \
 
 mkdir -p "$CHANGELOG_DIR"
 
-if [ -f "$CHANGELOG_PATH" ]; then
-  sed -i "1 r $TEMP_FILE" "$CHANGELOG_PATH"
-else
-  { echo "# Changelog"; cat "$TEMP_FILE"; } > "$CHANGELOG_PATH"
-fi
+python3 - "$CHANGELOG_PATH" "$TEMP_FILE" <<'PYTHON'
+import pathlib
+import sys
+
+changelog_path = pathlib.Path(sys.argv[1])
+release_notes_path = pathlib.Path(sys.argv[2])
+release_notes = release_notes_path.read_text()
+
+if changelog_path.exists():
+  lines = changelog_path.read_text().splitlines(keepends=True)
+  if lines:
+    changelog_path.write_text(lines[0] + release_notes + ''.join(lines[1:]))
+  else:
+    changelog_path.write_text('# Changelog\n' + release_notes)
+else:
+  changelog_path.write_text('# Changelog\n' + release_notes)
+PYTHON
 rm "$TEMP_FILE"
 echo "Changelog generated at $CHANGELOG_PATH"
 
