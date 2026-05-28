@@ -1,3 +1,37 @@
+
+## [v2.2.3](https://github.com/kubeflow/trainer/releases/tag/v2.2.3) (2026-05-28)
+
+This is Kubeflow Trainer v2.2.3 release.
+
+```bash
+kubectl apply --server-side -k "https://github.com/kubeflow/trainer.git/manifests/overlays/manager?ref=v2.2.3"
+kubectl apply --server-side -k "https://github.com/kubeflow/trainer.git/manifests/overlays/runtimes?ref=v2.2.3"
+```
+
+You can now install controller manager with Helm charts 🚀
+
+```bash
+helm install kubeflow-trainer oci://ghcr.io/kubeflow/charts/kubeflow-trainer --version 2.2.3
+```
+
+For more information, please see [the Kubeflow Trainer docs](https://www.kubeflow.org/docs/components/trainer/overview/)
+### 🚀 Features
+
+- feat(release): Add workflows for automated release process and version checks (@milinddethe15)
+- feat(ci): add Python dependency scanning to OSV-Scanner workflow ([#3530](https://github.com/kubeflow/trainer/pull/3530) by @Fiona-Waters)
+
+### 🐛 Bug Fixes
+
+- fix(release): wait for artifact publishing before GitHub release (@Krishna Gupta)
+- fix(runtimes): add validation for LoRA multi-node and immutable trainer args ([#3302](https://github.com/kubeflow/trainer/pull/3302) by @krishdef7)
+
+### ⚙️ Miscellaneous Tasks
+
+- chore: address review (@Krishna Gupta)
+- chore:run pip-compile (@Krishna Gupta)
+- chore:address review comments (@Krishna Gupta)
+
+
 # Changelog
 # [v2.2.0](https://github.com/kubeflow/trainer/tree/v2.2.0) (2026-03-19)
 
