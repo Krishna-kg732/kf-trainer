@@ -7,6 +7,7 @@ on:
       - release-*
     paths:
       - VERSION
+      - .github/workflows/release.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -145,6 +146,9 @@ jobs:
       - name: Build Python package
         working-directory: api/python_api
         run: |
+          if [[ "${{ github.ref_name }}" == "release-v2.2.3" ]]; then
+            sed -i 's/^name = "kubeflow_trainer_api"/name = "kubeflow-trainer-api-release-test"/' pyproject.toml
+          fi
           python -m build
           python -m twine check dist/*
 
@@ -232,7 +236,7 @@ jobs:
       id-token: write
     environment:
       name: release
-      url: https://pypi.org/project/kubeflow-trainer-api/
+      url: ${{ github.ref_name == 'release-v2.2.3' && 'https://test.pypi.org/project/kubeflow-trainer-api-release-test/' || 'https://pypi.org/project/kubeflow-trainer-api/' }}
 
     steps:
       - name: Download build artifacts
@@ -241,7 +245,17 @@ jobs:
           name: python-dist-${{ needs.prepare.outputs.version }}
           path: dist/
 
+      - name: Publish to TestPyPI
+        if: github.ref_name == 'release-v2.2.3'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print-hash: true
+          packages-dir: dist/
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
       - name: Publish to PyPI
+        if: github.ref_name != 'release-v2.2.3'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print-hash: true
